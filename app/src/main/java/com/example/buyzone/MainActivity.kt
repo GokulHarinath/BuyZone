@@ -64,7 +64,7 @@ fun BuyZoneApp(navController: NavHostController) {
         }
 
         composable("cart") {
-            CartScreen()
+            CartScreen(navController)
         }
 
         composable("profile") {
@@ -122,19 +122,7 @@ fun SplashScreen(navController: NavHostController) {
     }
 }
 
-@Composable
-fun CartScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Cart Screen",
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color.Black
-        )
-    }
-}
+
 
 @Composable
 fun ProfileScreen() {

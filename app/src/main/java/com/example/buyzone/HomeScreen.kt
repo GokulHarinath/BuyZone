@@ -25,15 +25,15 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,19 +106,36 @@ fun HomeScreen(navController: NavHostController) {
                 NavigationBarItem(
                     selected = true,
                     onClick = { navController.navigate("home") },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Home,
+                            contentDescription = "Home"
+                        )
+                    },
                     label = { Text("Home") }
                 )
+
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate("cart") },
-                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Cart") },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Cart"
+                        )
+                    },
                     label = { Text("Cart") }
                 )
+
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate("profile") },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = "Profile"
+                        )
+                    },
                     label = { Text("Profile") }
                 )
             }
@@ -169,7 +186,7 @@ fun HomeScreen(navController: NavHostController) {
             item {
                 LazyRow {
                     items(categories) { category ->
-                        CategoryItem(category)
+                        CategoryItem(category = category)
                     }
                 }
 
@@ -191,9 +208,10 @@ fun HomeScreen(navController: NavHostController) {
                         navController.navigate("productDetails")
                     },
                     onAddToCart = {
-                        navController.navigate("cart")
+                        CartManager.addToCart(product)
                     }
                 )
+
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
@@ -205,7 +223,10 @@ fun CategoryItem(category: String) {
     Box(
         modifier = Modifier
             .padding(end = 10.dp)
-            .background(Color(0xFFFFD8B1), RoundedCornerShape(16.dp))
+            .background(
+                color = Color(0xFFFFD8B1),
+                shape = RoundedCornerShape(16.dp)
+            )
             .clickable { }
             .padding(horizontal = 18.dp, vertical = 12.dp)
     ) {
@@ -237,12 +258,16 @@ fun ProductCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Box(
                     modifier = Modifier
                         .size(70.dp)
-                        .background(Color(0xFFFFE7D1), RoundedCornerShape(14.dp)),
+                        .background(
+                            color = Color(0xFFFFE7D1),
+                            shape = RoundedCornerShape(14.dp)
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(text = "Img")
@@ -256,11 +281,14 @@ fun ProductCard(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
+
                     Text(
                         text = product.category,
                         color = Color.Gray
                     )
+
                     Spacer(modifier = Modifier.height(6.dp))
+
                     Text(
                         text = product.price,
                         color = Color(0xFFCC6A00),
@@ -269,7 +297,9 @@ fun ProductCard(
                 }
             }
 
-            Button(onClick = onAddToCart) {
+            Button(
+                onClick = onAddToCart
+            ) {
                 Text("Add")
             }
         }
