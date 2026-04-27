@@ -5,26 +5,36 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(navController: NavHostController) {
 
-    val username = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+
+    val auth = FirebaseAuth.getInstance()
 
     Column(
         modifier = Modifier
@@ -47,28 +57,71 @@ fun LoginScreen(navController: NavHostController) {
         )
 
         OutlinedTextField(
-            value = username.value,
-            onValueChange = { username.value = it },
-            label = { Text("Username or Email") },
+            value = email,
+            onValueChange = {
+                email = it
+                errorMessage = ""
+            },
+            label = { Text("Email") },
             modifier = Modifier
-                .padding(top = 30.dp)
+                .fillMaxWidth()
+                .padding(top = 30.dp),
+            singleLine = true
         )
 
         OutlinedTextField(
-            value = password.value,
-            onValueChange = { password.value = it },
+            value = password,
+            onValueChange = {
+                password = it
+                errorMessage = ""
+            },
             label = { Text("Password") },
             modifier = Modifier
-                .padding(top = 12.dp)
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true
         )
+
+        if (errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 12.dp)
+            )
+        }
 
         Button(
             onClick = {
-                navController.navigate("home")
+                if (email.isBlank() || password.isBlank()) {
+                    errorMessage = "Please enter email and password"
+                    return@Button
+                }
+
+                isLoading = true
+
+                auth.signInWithEmailAndPassword(email.trim(), password)
+                    .addOnCompleteListener { task ->
+                        isLoading = false
+
+                        if (task.isSuccessful) {
+                            navController.navigate("home") {
+                                popUpTo("login") { inclusive = true }
+                            }
+                        } else {
+                            errorMessage = task.exception?.message ?: "Login failed"
+                        }
+                    }
             },
-            modifier = Modifier.padding(top = 24.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 24.dp)
         ) {
-            Text("Login")
+            if (isLoading) {
+                CircularProgressIndicator()
+            } else {
+                Text("Login")
+            }
         }
 
         Text(
