@@ -68,7 +68,7 @@ fun BuyZoneApp(navController: NavHostController) {
         }
 
         composable("profile") {
-            ProfileScreen()
+            ProfileScreen(navController)
         }
 
         composable("productDetails") {
@@ -124,19 +124,6 @@ fun SplashScreen(navController: NavHostController) {
 
 
 
-@Composable
-fun ProfileScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Profile Screen",
-            style = MaterialTheme.typography.headlineSmall,
-            color = Color.Black
-        )
-    }
-}
 
 @Composable
 fun ProductDetailsScreen() {

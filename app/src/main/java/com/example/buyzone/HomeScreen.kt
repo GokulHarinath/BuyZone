@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,27 +33,20 @@ data class Product(
 @Composable
 fun HomeScreen(navController: NavHostController) {
 
-    val searchText = remember { mutableStateOf("") }
+    var searchText by remember { mutableStateOf("") }
     val products = remember { mutableStateListOf<Product>() }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
 
-    val db = FirebaseFirestore.getInstance()
-
     LaunchedEffect(Unit) {
-
-        uploadSampleProductsToFirestore(db) // DELETE this line after first successful upload
-
-        db.collection("products")
+        FirebaseFirestore.getInstance()
+            .collection("products")
             .get()
             .addOnSuccessListener { result ->
                 products.clear()
-
                 for (document in result) {
-                    val product = document.toObject(Product::class.java)
-                    products.add(product)
+                    products.add(document.toObject(Product::class.java))
                 }
-
                 isLoading = false
             }
             .addOnFailureListener { error ->
@@ -61,24 +55,18 @@ fun HomeScreen(navController: NavHostController) {
             }
     }
 
-    val categories = products
-        .map { it.category }
-        .distinct()
-        .filter { it.isNotBlank() }
+    val categories = products.map { it.category }.distinct().filter { it.isNotBlank() }
 
     val filteredProducts = products.filter {
-        it.name.contains(searchText.value, ignoreCase = true) ||
-                it.category.contains(searchText.value, ignoreCase = true)
+        it.name.contains(searchText, ignoreCase = true) ||
+                it.category.contains(searchText, ignoreCase = true)
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "BuyZone",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("BuyZone", fontWeight = FontWeight.Bold)
                 },
                 actions = {
                     Icon(
@@ -86,9 +74,7 @@ fun HomeScreen(navController: NavHostController) {
                         contentDescription = "Cart",
                         modifier = Modifier
                             .padding(end = 16.dp)
-                            .clickable {
-                                navController.navigate("cart")
-                            }
+                            .clickable { navController.navigate("cart") }
                     )
                 }
             )
@@ -98,27 +84,21 @@ fun HomeScreen(navController: NavHostController) {
                 NavigationBarItem(
                     selected = true,
                     onClick = { navController.navigate("home") },
-                    icon = {
-                        Icon(Icons.Default.Home, contentDescription = "Home")
-                    },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
                     label = { Text("Home") }
                 )
 
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate("cart") },
-                    icon = {
-                        Icon(Icons.Default.ShoppingCart, contentDescription = "Cart")
-                    },
+                    icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Cart") },
                     label = { Text("Cart") }
                 )
 
                 NavigationBarItem(
                     selected = false,
                     onClick = { navController.navigate("profile") },
-                    icon = {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
-                    },
+                    icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
                     label = { Text("Profile") }
                 )
             }
@@ -144,10 +124,7 @@ fun HomeScreen(navController: NavHostController) {
                         .padding(innerPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = errorMessage,
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
                 }
             }
 
@@ -156,38 +133,52 @@ fun HomeScreen(navController: NavHostController) {
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(innerPadding)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0xFFFFF3E0),
+                                    Color(0xFFFFE0B2)
+                                )
+                            )
+                        )
                         .padding(16.dp)
                 ) {
 
                     item {
                         Text(
-                            text = "Find your best products",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
+                            text = "Welcome to BuyZone",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
                         )
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Search, browse and add your favourite products to cart.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.DarkGray,
+                            modifier = Modifier.padding(top = 6.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(18.dp))
 
                         OutlinedTextField(
-                            value = searchText.value,
-                            onValueChange = { searchText.value = it },
+                            value = searchText,
+                            onValueChange = { searchText = it },
                             modifier = Modifier.fillMaxWidth(),
-                            label = { Text("Search products") },
+                            label = { Text("Search products or categories") },
                             leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search"
-                                )
+                                Icon(Icons.Default.Search, contentDescription = "Search")
                             },
-                            shape = RoundedCornerShape(14.dp)
+                            shape = RoundedCornerShape(16.dp),
+                            singleLine = true
                         )
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(22.dp))
 
                         Text(
                             text = "Categories",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -199,17 +190,17 @@ fun HomeScreen(navController: NavHostController) {
                         } else {
                             LazyRow {
                                 items(categories) { category ->
-                                    CategoryItem(category = category)
+                                    CategoryItem(category)
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(22.dp))
 
                         Text(
-                            text = "Popular Products",
+                            text = "Available Products",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -240,33 +231,12 @@ fun HomeScreen(navController: NavHostController) {
     }
 }
 
-fun uploadSampleProductsToFirestore(db: FirebaseFirestore) {
-
-    val sampleProducts = listOf(
-        Product("Wireless Headphones", "£49.99", "Electronics"),
-        Product("Smart Watch", "£79.99", "Electronics"),
-        Product("Men T-Shirt", "£19.99", "Fashion"),
-        Product("Running Shoes", "£59.99", "Shoes"),
-        Product("Skin Care Kit", "£24.99", "Beauty"),
-        Product("Java Programming Book", "£29.99", "Books")
-    )
-
-    for (product in sampleProducts) {
-        db.collection("products")
-            .document(product.name)
-            .set(product)
-    }
-}
-
 @Composable
 fun CategoryItem(category: String) {
     Box(
         modifier = Modifier
             .padding(end = 10.dp)
-            .background(
-                color = Color(0xFFFFD8B1),
-                shape = RoundedCornerShape(16.dp)
-            )
+            .background(Color(0xFFFFCC80), RoundedCornerShape(18.dp))
             .padding(horizontal = 18.dp, vertical = 12.dp)
     ) {
         Text(
@@ -288,60 +258,39 @@ fun ProductCard(
             .fillMaxWidth()
             .clickable { onViewDetails() },
         shape = RoundedCornerShape(18.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
+            Text(
+                text = product.name,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(70.dp)
-                        .background(
-                            color = Color(0xFFFFE7D1),
-                            shape = RoundedCornerShape(14.dp)
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "Img")
-                }
+            Spacer(modifier = Modifier.height(4.dp))
 
-                Spacer(modifier = Modifier.width(14.dp))
+            Text(
+                text = product.category,
+                color = Color.Gray
+            )
 
-                Column {
-                    Text(
-                        text = product.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                    Text(
-                        text = product.category,
-                        color = Color.Gray
-                    )
+            Text(
+                text = product.price,
+                color = Color(0xFFCC6A00),
+                fontWeight = FontWeight.Bold
+            )
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = product.price,
-                        color = Color(0xFFCC6A00),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(12.dp))
 
             Button(
-                onClick = onAddToCart
+                onClick = onAddToCart,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Add")
+                Text("Add to Cart")
             }
         }
     }
